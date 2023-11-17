@@ -1,0 +1,2 @@
+# DeviceUSB2TTL
+使用usb转ttl实现Android的串口数据收发
