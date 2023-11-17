@@ -85,7 +85,7 @@ class DeviceDataService : Service() {
         Log.d("设备数量:", findAllDrivers.size.toString())
         if (findAllDrivers.isEmpty()) {
             Log.d("无设备", "无设备")
-            sendDeviceErrorMsg(this,"无传感器设备")
+            sendDeviceErrorMsg(this, "无传感器设备")
             return
         }
         findAllDrivers.forEach {
@@ -117,11 +117,11 @@ class DeviceDataService : Service() {
                     UsbSerialPort.PARITY_NONE
                 )
             }
-            usbReadThread = UsbReadThread(this,usbSerialPort)
+            usbReadThread = UsbReadThread(this, usbSerialPort)
             usbReadThread.start()
         } else {
             Log.d("设备链接", "设备链接失败")
-            sendDeviceErrorMsg(this,"设备链接失败")
+            sendDeviceErrorMsg(this, "设备链接失败")
         }
     }
 
@@ -160,12 +160,34 @@ class DeviceDataService : Service() {
         fun sendDeviceErrorMsg(service: Service, msg: String) {
             service.sendBroadcast(Intent(DEVICE_ERROR_MSG).putExtra("data", msg))
         }
+
         /**
          * 发送数据接收指令
          */
-        fun sendDeviceDataMsg(service: Service,data:String) {
-            service.sendBroadcast(Intent(DEVICE_DATA_MSG).putExtra("data",data))
+        fun sendDeviceDataMsg(service: Service, data: String) {
+            service.sendBroadcast(Intent(DEVICE_DATA_MSG).putExtra("data", data))
         }
+    }
+
+    /**
+     * 计算校验位，传入发送的指令，获取校验位
+     * 发送：69,9,1,83,1,0,64,0,32,24,43
+     * 返回：24
+     */
+    fun calculationCheckHex(hexArray: ArrayList<String>): String {
+        var sum2 = 0 // 二进制
+        for (i in 1..hexArray.size - 3) {
+            sum2 += ConvertUtils.hexString2Int(hexArray[i])
+        }
+
+        val sumHex = ConvertUtils.int2HexString(sum2)
+        var sumBytes = ConvertUtils.hexString2Bytes(sumHex)
+        if (sumBytes.size > 1) {
+            sumBytes = byteArrayOf(sumBytes[1])
+        }
+        var checkHex = ConvertUtils.bytes2HexString(sumBytes)
+
+        return checkHex
     }
 }
 
@@ -179,7 +201,7 @@ fun String.decodeHex(): ByteArray {
     return ByteArray(length / 2) { byteIterator.next() }
 }
 
-class UsbReadThread(service: Service,usbSerialPort: UsbSerialPort) : Thread() {
+class UsbReadThread(service: Service, usbSerialPort: UsbSerialPort) : Thread() {
     val usbSerialPort = usbSerialPort
     val service = service
     var startReceive = false
@@ -189,8 +211,17 @@ class UsbReadThread(service: Service,usbSerialPort: UsbSerialPort) : Thread() {
             if (startReceive) {
                 usbSerialPort.read(byteArray, 1000)
                 Log.d("收到数据", ConvertUtils.bytes2HexString(byteArray))
-                sendDeviceDataMsg(service,ConvertUtils.bytes2HexString(byteArray))
+                // 解析数据
+                decodeData(ConvertUtils.bytes2HexString(byteArray))
+                sendDeviceDataMsg(service, ConvertUtils.bytes2HexString(byteArray))
             }
         }
+    }
+
+    /**
+     * 处理数据，解析出高度、速度、次数、基准高度
+     */
+    private fun decodeData(data:String) {
+
     }
 }
