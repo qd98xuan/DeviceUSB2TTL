@@ -37,4 +37,25 @@ class ExampleUnitTest {
 
         println(checkHex)
     }
+
+    @Test
+    fun testDecodeData() {
+        val str = "690F028201000501000000A600A601E7436906028400A63243"
+//        println("690F028201000501000000A600A601E7436906028400A63243".length)
+        var i = 0
+        var hex = StringBuffer()
+        str.forEach {
+            if (i==1) {
+                hex.append(it)
+                i = 0
+                println(hex)
+                hex.setLength(0)
+            }else{
+                hex.append(it)
+                i++
+            }
+        }
+
+
+    }
 }

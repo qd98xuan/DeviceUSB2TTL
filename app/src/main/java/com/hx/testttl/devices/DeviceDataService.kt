@@ -222,6 +222,37 @@ class UsbReadThread(service: Service, usbSerialPort: UsbSerialPort) : Thread() {
      * 处理数据，解析出高度、速度、次数、基准高度
      */
     private fun decodeData(data:String) {
+        Log.d("需要解析的数据",data)
+        val spliceData = spliceData(data)
+        val deviceId = spliceData.get(4)
+        val time1 = ConvertUtils.hexString2Int(spliceData.get(5))
+        val time2 = ConvertUtils.hexString2Int(spliceData.get(6))
+        Log.d("次数1",time1.toString())
+        Log.d("次数2",time2.toString())
 
+
+
+    }
+
+    /**
+     * 将数据进行分割
+     */
+    private fun spliceData(str:String):ArrayList<String> {
+        var i = 0
+        var hex = StringBuffer()
+        val hexList = arrayListOf<String>()
+        str.forEach {
+            if (i==1) {
+                hex.append(it)
+                i = 0
+                println(hex)
+                hexList.add(hex.toString())
+                hex.setLength(0)
+            }else{
+                hex.append(it)
+                i++
+            }
+        }
+        return hexList
     }
 }
